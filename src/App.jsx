@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import { io } from "socket.io-client";
+import { useEffect, useState } from "react";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
 
@@ -11,14 +10,6 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-
-  const socket = useMemo(
-    () =>
-      io(API_BASE_URL, {
-        transports: ["websocket", "polling"],
-      }),
-    []
-  );
 
   useEffect(() => {
     async function loadFeedback() {
@@ -35,22 +26,7 @@ function App() {
     }
 
     loadFeedback();
-
-    socket.on("feedback:init", (items) => {
-      setFeedback(items);
-    });
-
-    socket.on("feedback:new", (item) => {
-      setFeedback((current) => {
-        const exists = current.some((entry) => entry.id === item.id);
-        return exists ? current : [item, ...current];
-      });
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [socket]);
+  }, []);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -79,6 +55,14 @@ function App() {
         throw new Error(payload.error || "Failed to submit feedback.");
       }
 
+      const savedItem = await response.json();
+
+      setFeedback((current) => {
+        const exists = current.some((entry) => entry.id === savedItem.id);
+        return exists ? current : [savedItem, ...current];
+      });
+
+      setName("");
       setMessage("");
       setRating("5");
     } catch (submitError) {
@@ -91,8 +75,8 @@ function App() {
   return (
     <main className="container">
       <section className="card">
-        <h1>Real-Time Feedback Wall</h1>
-        <p>Share feedback instantly. Everyone connected sees new feedback in real time.</p>
+        <h1>Feedback Wall</h1>
+        <p>Share your feedback and view the latest submissions.</p>
 
         <form onSubmit={handleSubmit} className="form">
           <label>
@@ -136,7 +120,7 @@ function App() {
       </section>
 
       <section className="card">
-        <h2>Live Feed</h2>
+        <h2>Latest Feedback</h2>
         {loading ? <p>Loading feedback...</p> : null}
 
         {!loading && feedback.length === 0 ? (
