@@ -18,6 +18,7 @@ function App() {
         if (!response.ok) throw new Error("Failed to fetch feedback.");
         const data = await response.json();
         setFeedback(data);
+        setError("");
       } catch (fetchError) {
         setError(fetchError.message || "Unable to load feedback.");
       } finally {
@@ -62,6 +63,7 @@ function App() {
         return exists ? current : [savedItem, ...current];
       });
 
+      setError("");
       setName("");
       setMessage("");
       setRating("5");
